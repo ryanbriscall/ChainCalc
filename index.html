@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>ChainCalc</title>
+	<meta name="description" content="Multiple calculators that you can freely type into, and link one answer to another.">
+	<style>
+		:root { font-size: 16px; }
+		@media (min-width: 240px) and (max-width: 1200px) {
+			:root { font-size: calc(16px + (28 - 16) * ((100vw - 240px) / (1200 - 240))); }
+		}
+		@media (min-width: 1200px) { :root { font-size: 28px; } }
+		html { font-family: sans-serif; -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+		body {
+			line-height: 1.75;
+			font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+			text-rendering: optimizeLegibility;
+			-webkit-font-smoothing: antialiased;
+			-moz-osx-font-smoothing: grayscale;
+			margin: 0 0.8em 0.8em 0.8em;
+			text-align: center;
+		}
+
+		*, *::before, *::after { box-sizing: border-box; }
+
+		button, input, select, textarea, .textarea { font-family: inherit; font-size: inherit; outline: none; }
+		textarea, .textarea { line-height: 1.1; }
+		input[type="text"], input[type="file"], textarea, .textarea { appearance: textfield; border: 0.2em inset #808080; }
+		input[type="file"] { padding: 0.1em; }
+		input[type="number"] { width: 4em; }
+		button, input[type="button"], input[type="submit"] { border: 0.2em outset #808080; }
+		button:active, button.active, 
+		input[type="button"]:active, input[type="button"].active
+		input[type="submit"]:active, input[type="submit"].active { border: 0.2em inset #808080; }
+		button:disabled,
+		input[type="button"]:disabled,
+		input[type="submit"]:disabled { border: 0.2em solid #808080; }
+		.calc { margin-bottom: 1em; }
+		.calc > div > code { color: #F93; }
+		.display { height: 2em; }
+		.display .a { position: relative; }
+		.display .b { opacity: 0.25; position: absolute; }
+		input[type="text"].input2 {
+			background: none;
+			border: none;
+			margin-top: 4px;
+		}
+	</style>
+	<style>
+		body { color: #eee; background: #111; }
+		input, textarea, button, button:disabled { color: #ccc; background: #333; }
+	</style>
+</head>
+<body>
+	<div style="margin-bottom:0.8em"><button onclick="demo()">Demo preset</button></div>
+
+	<div class="calc">
+		<div><code>$1</code>  <span class="display"></span></div>
+		<div>
+			<input type="text" value="640/2" class="input"><br>
+			<input type="text" class="input2">
+		</div>
+	</div>
+	<div class="calc">
+		<div><code>$2</code>  <span class="display"></span></div>
+		<div>
+			<input type="text" value="$1/2" class="input"><br>
+			<input type="text" class="input2">
+		</div>
+	</div>
+	<div class="calc">
+		<div><code>$3</code>  <span class="display"></span></div>
+		<div>
+			<input type="text" value="$2/2" class="input"><br>
+			<input type="text" class="input2">
+		</div>
+	</div>
+	<p>&nbsp;</p>
+	<div class="calc">
+		<div><code>$4</code>  <span class="display"></span></div>
+		<div>
+			<input type="text" value="$2/2" class="input"><br>
+			<input type="text" class="input2">
+		</div>
+	</div>
+	<div class="calc">
+		<div><code>$5</code>  <span class="display"></span></div>
+		<div>
+			<input type="text" value="$2/2" class="input"><br>
+			<input type="text" class="input2">
+		</div>
+	</div>
+
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			document.querySelectorAll('.calc').forEach(function(el) {
+				var input = el.querySelector('.input');
+				"keyup".split(" ").forEach(function(evt) {
+					input.addEventListener(evt, function(e) {
+						calculate();
+					});
+				});
+			});
+			calculate();
+		});
+
+		function calculate(els) {
+			if (els === undefined) {
+				els = document.querySelectorAll('.calc');
+			}
+			els.forEach(function(el) {
+				var input = el.querySelector('.input');
+				var display = el.querySelector('.display');
+				if (!input.value.match(/^[\d\(\)\.\-\+\*\/\^\$]+$/)) {
+					display.innerHTML = '';
+					return;
+				}
+				var val = input.value;
+				val = val.replace(/\^/, '**');
+				var refs = val.match(/\$\d+/g);
+				if (refs !== null) {
+					var els = document.querySelectorAll('.calc');
+					refs.forEach(function(ref) {
+						var num = +ref.replace(/^\$/g, '');
+						var val2 = els[num-1].querySelector('.display').textContent;
+						val = val.replace(ref, val2);
+					});
+				}
+
+				try {
+					var answer = eval(val);
+					var parts = (answer+"").split('.');
+					var answA = ''; var answB = '';
+					if (parts.length > 1) {
+						var dec = (parts[1]+"").length;
+						if (dec > 2) {
+							answA = parts[0]+"."+parts[1].substr(0, 2);
+							answB = parts[1].substr(2);
+						}
+						else {
+							answA = parts[0]+"."+parts[1];
+						}
+					}
+					else {
+						answA = answer;
+					}
+					display.innerHTML = `<span class="a">${answA}<span class="b">${answB}</span></span>`;
+				}
+				catch(err) {
+				}
+			});
+		}
+	</script>
+</body>
+</html>
